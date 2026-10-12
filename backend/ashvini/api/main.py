@@ -18,7 +18,7 @@ from typing import Literal
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import PlainTextResponse, StreamingResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -109,6 +109,12 @@ def rate_limited(request: Request) -> None:
 
 
 # ---------- health ----------
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Someone opening the bare API address lands on the interactive docs, not a 404."""
+    return RedirectResponse("/docs")
+
 
 @app.get("/api/health")
 def health(session: Session = Depends(get_session)):

@@ -122,3 +122,8 @@ def test_alerts_go_out_once_per_level(client):
         assert first == 1 and again == 0
         assert len(s.scalars(select(Delivery)).all()) == 1
     assert b"MANOEUVRE" in seen[0].content
+
+
+def test_bare_address_points_to_the_docs(client):
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code in (302, 307) and r.headers["location"] == "/docs"

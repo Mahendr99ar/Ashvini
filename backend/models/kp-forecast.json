@@ -1,0 +1,142 @@
+{
+  "name": "kp-forecast",
+  "task": "Forecast the planetary K index 3, 6, 12 and 24 hours ahead from upstream solar wind.",
+  "data": "NASA OMNI",
+  "split": "By time: train before 2017-01-01, validate to 2020-01-01, test after.",
+  "baseline": "Persistence (Kp now) and 27-day recurrence",
+  "results": {
+    "h3": {
+      "persistence": {
+        "rmse": 0.8642093962771058,
+        "storm_tss": 0.5063658985405934
+      },
+      "recurrence_27d": {
+        "rmse": 1.6389316356961774,
+        "storm_tss": 0.02711587912260436
+      },
+      "lightgbm": {
+        "rmse": 0.7586860210162063,
+        "storm_tss": 0.4518405981401698,
+        "storm_cut": 3.1,
+        "storm_tss_tuned": 0.8084861570394755
+      },
+      "tcn": {
+        "rmse": 0.780654788017273,
+        "storm_tss": 0.2682851797963002,
+        "storm_cut": 2.9,
+        "storm_tss_tuned": 0.7874028961407885
+      }
+    },
+    "h6": {
+      "persistence": {
+        "rmse": 1.1044059059346303,
+        "storm_tss": 0.3595352083477728
+      },
+      "recurrence_27d": {
+        "rmse": 1.6389731271111208,
+        "storm_tss": 0.027114602353148734
+      },
+      "lightgbm": {
+        "rmse": 0.9553152314363881,
+        "storm_tss": 0.2416415760472581,
+        "storm_cut": 3.0,
+        "storm_tss_tuned": 0.6752953469498383
+      },
+      "tcn": {
+        "rmse": 0.9743736982345581,
+        "storm_tss": 0.12234559689600222,
+        "storm_cut": 2.6,
+        "storm_tss_tuned": 0.6276605002424998
+      }
+    },
+    "h12": {
+      "persistence": {
+        "rmse": 1.3228390988116985,
+        "storm_tss": 0.22285130474621742
+      },
+      "recurrence_27d": {
+        "rmse": 1.6390561193955049,
+        "storm_tss": 0.02711204841617998
+      },
+      "lightgbm": {
+        "rmse": 1.1104609043372524,
+        "storm_tss": 0.04437915677322572,
+        "storm_cut": 2.8,
+        "storm_tss_tuned": 0.46099724507376805
+      },
+      "tcn": {
+        "rmse": 1.1324052810668945,
+        "storm_tss": 0.04173979813243301,
+        "storm_cut": 2.5,
+        "storm_tss_tuned": 0.4101702880507585
+      }
+    },
+    "h24": {
+      "persistence": {
+        "rmse": 1.5102234665647079,
+        "storm_tss": 0.12089698697787807
+      },
+      "recurrence_27d": {
+        "rmse": 1.6392014401611097,
+        "storm_tss": 0.027106938949433175
+      },
+      "lightgbm": {
+        "rmse": 1.2291242992761116,
+        "storm_tss": 0.0033134526176275677,
+        "storm_cut": 2.5,
+        "storm_tss_tuned": 0.3332149576080926
+      },
+      "tcn": {
+        "rmse": 1.2599486112594604,
+        "storm_tss": 0.009459656660800921,
+        "storm_cut": 2.7,
+        "storm_tss_tuned": 0.17280513857416457
+      }
+    }
+  },
+  "beats_baseline": true,
+  "limitations": [
+    "OMNI is propagated to the bow shock, so lead time beyond about an hour comes from the model, not the data.",
+    "Storms are rare; storm TSS on a few years of test data has wide error bars.",
+    "Chronos runs zero-shot on Kp alone and does not see the solar wind.",
+    "Regression pulls forecasts toward the mean; storm calls use a cut tuned on validation, reported separately."
+  ],
+  "features": [
+    "kp_now",
+    "kp_lag3",
+    "kp_lag6",
+    "kp_lag12",
+    "kp_lag24",
+    "bz_mean3",
+    "bz_min3",
+    "speed_mean3",
+    "bz_mean6",
+    "bz_min6",
+    "speed_mean6",
+    "bz_mean12",
+    "bz_min12",
+    "speed_mean12",
+    "ey",
+    "ey_mean3",
+    "density",
+    "pressure",
+    "hour_sin",
+    "hour_cos",
+    "doy_sin",
+    "doy_cos",
+    "kp_recur27_h3",
+    "kp_recur27_h6",
+    "kp_recur27_h12",
+    "kp_recur27_h24"
+  ],
+  "extra": {
+    "storm_threshold_kp": 5.0,
+    "lower_error_than_persistence": true,
+    "storm_guardrail_passed": true
+  },
+  "created": "2026-10-11T21:51:05+00:00",
+  "environment": {
+    "python": "3.13.15",
+    "commit": null
+  }
+}

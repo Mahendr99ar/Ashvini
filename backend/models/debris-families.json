@@ -1,0 +1,39 @@
+{
+  "name": "debris-families",
+  "task": "Group fragments into break-up families and attribute new pieces.",
+  "data": "CelesTrak GP debris",
+  "split": "Clustering on all pieces; attribution trains on 75% of pieces and tests on the rest.",
+  "baseline": "Nearest mean orbit plane",
+  "results": {
+    "clustering": {
+      "adjusted_rand_index": 0.7843547106110771,
+      "clusters_found": 3,
+      "families": 3,
+      "noise_share": 0.11784511784511785
+    },
+    "attribution": {
+      "nearest_plane_top1": 0.6395864106351551,
+      "lightgbm_top1": 0.9911373707533235
+    }
+  },
+  "beats_baseline": true,
+  "limitations": [
+    "Families that share an orbit (two break-ups in one plane) cannot be separated by elements alone.",
+    "The designator labels the launch, which merges pieces from separate events on the same launch."
+  ],
+  "features": [
+    "a_km",
+    "ecc",
+    "inc_deg",
+    "raan_sin",
+    "raan_cos",
+    "perigee_km",
+    "apogee_km"
+  ],
+  "extra": {},
+  "created": "2026-10-11T21:02:20+00:00",
+  "environment": {
+    "python": "3.13.15",
+    "commit": null
+  }
+}

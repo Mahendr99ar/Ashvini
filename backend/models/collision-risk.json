@@ -1,0 +1,107 @@
+{
+  "name": "collision-risk",
+  "task": "Predict the final log10 collision risk of an event from CDMs issued at least two days before TCA.",
+  "data": "ESA Collision Avoidance Challenge",
+  "split": "By event: 75% development (4-fold out-of-fold tuning), 12.5% conformal calibration, 12.5% test.",
+  "baseline": "Latest visible CDM risk carried forward",
+  "results": {
+    "baseline": {
+      "score": 0.6914243030551432,
+      "mse_hr": 0.36011682450788707,
+      "f2": 0.5208333333333333,
+      "missed_high_risk": 3,
+      "false_alarms": 34
+    },
+    "baseline_tuned_line": {
+      "score": 0.6842219665649854,
+      "mse_hr": 0.36011682450788707,
+      "f2": 0.5263157894736843,
+      "missed_high_risk": 3,
+      "false_alarms": 33,
+      "shrink": 0.0,
+      "cut": -5.7
+    },
+    "lightgbm_full": {
+      "score": 0.6025857141883874,
+      "mse_hr": 0.317150375888625,
+      "f2": 0.5263157894736843,
+      "missed_high_risk": 3,
+      "false_alarms": 33,
+      "shrink": 0.1,
+      "cut": -5.7
+    },
+    "lightgbm_serving": {
+      "score": 0.6266153733523859,
+      "mse_hr": 0.32979756492230844,
+      "f2": 0.5263157894736843,
+      "missed_high_risk": 3,
+      "false_alarms": 33,
+      "shrink": 0.1,
+      "cut": -5.7
+    },
+    "transformer": {
+      "score": 0.6842219665649854,
+      "mse_hr": 0.36011682450788707,
+      "f2": 0.5263157894736843,
+      "missed_high_risk": 3,
+      "false_alarms": 33,
+      "shrink": 0.0,
+      "cut": -5.7
+    },
+    "deep_ensemble": {
+      "score": 0.7025289260406091,
+      "mse_hr": 0.33631703906199373,
+      "f2": 0.4787234042553192,
+      "missed_high_risk": 4,
+      "false_alarms": 33,
+      "shrink": 0.1,
+      "cut": -5.7,
+      "mean_predictive_std": 0.012849732302129269
+    },
+    "serving_interval": {
+      "half_width": 1.799465967304636,
+      "calibration_events": 35,
+      "test_events": 46,
+      "coverage_90": 1.0
+    },
+    "onnx_max_abs_diff": 6.145194944195964e-05
+  },
+  "beats_baseline": true,
+  "limitations": [
+    "Live events are scored from public TLE data, whose covariance is modelled, not measured.",
+    "High-risk events are rare; the test set holds few of them, so the score moves between seeds.",
+    "The serving model uses only features Ashvini can compute live, and is weaker than the full model.",
+    "Models predict the change from the latest risk; shrink and line are chosen on out-of-fold predictions. shrink 0 with cut -6 is the baseline, so a tie means the model added nothing on validation."
+  ],
+  "features": [
+    "time_to_tca",
+    "risk",
+    "max_risk_estimate",
+    "miss_distance",
+    "relative_speed",
+    "relative_position_r",
+    "relative_position_t",
+    "relative_position_n",
+    "mahalanobis_distance",
+    "t_sigma_r",
+    "t_sigma_t",
+    "t_sigma_n",
+    "c_sigma_r",
+    "c_sigma_t",
+    "c_sigma_n",
+    "c_object_type_debris",
+    "c_object_type_rocket_body"
+  ],
+  "extra": {
+    "best_model": "lightgbm_full",
+    "serving_model": "lightgbm_serving",
+    "serving_beats_baseline": true,
+    "target": "delta_from_risk",
+    "version": "collision-risk-0.3"
+  },
+  "created": "2026-10-11T23:32:34+00:00",
+  "environment": {
+    "python": "3.13.15",
+    "commit": null
+  }
+}

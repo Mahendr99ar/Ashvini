@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ashvini"
+version = "0.1.0"
+description = "Conjunction screening, collision risk and space weather awareness for Earth orbit"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Mahendra Meena" }]
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "sqlalchemy>=2.0",
+  "pydantic-settings>=2.2",
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "sgp4>=2.23",
+  "httpx>=0.27",
+  "python-multipart>=0.0.9",
+  "psycopg[binary]>=3.1",
+]
+
+[project.optional-dependencies]
+model = ["onnxruntime>=1.17"]
+dev = ["pytest>=8", "ruff>=0.4"]
+
+[tool.setuptools.packages.find]
+include = ["ashvini*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

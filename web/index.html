@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Ashvini watches Earth orbit: close approaches with collision risk, orbit changes and space weather, on public data." />
+    <title>Ashvini</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,500;112,600;112,700&family=JetBrains+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap" />
+    <script>
+      try { const t = localStorage.getItem("ashvini-theme"); if (t && t !== "auto") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <canvas id="scene" aria-label="3D view of Earth and the objects around it"></canvas>
+    <div id="labels"></div>
+
+    <div class="hud">
+      <header class="top panel">
+        <div class="brand">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="5.5" fill="var(--accent)" opacity=".9" />
+            <ellipse cx="16" cy="16" rx="14" ry="6" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(-28 16 16)" />
+            <circle cx="27.6" cy="10.6" r="2" fill="var(--warn)" />
+          </svg>
+          <b>Ashvini</b><small>Orbital awareness</small>
+        </div>
+        <span class="pill" id="sourcePill">Connecting…</span>
+        <span class="clock" id="clock"><b>--:--:--</b> UTC</span>
+        <div class="seg" role="group" aria-label="Colour theme">
+          <button class="btn" data-theme-set="auto" aria-pressed="true" title="Follow your device setting">Auto</button>
+          <button class="btn" data-theme-set="light" aria-pressed="false">Day</button>
+          <button class="btn" data-theme-set="dark" aria-pressed="false">Night</button>
+        </div>
+        <button class="btn" id="modelsBtn">Models</button>
+        <button class="btn" id="refBtn">References</button>
+      </header>
+
+      <div class="left">
+        <section class="stats panel" aria-label="Summary">
+          <div><span class="k">Objects</span><b id="sObj">0</b></div>
+          <div><span class="k">Close approaches</span><b id="sCa">0</b></div>
+          <div><span class="k">Kp index</span><b id="sKp">-</b></div>
+          <div><span class="k">Next TCA</span><b id="sTca">--</b></div>
+        </section>
+        <section class="filters panel" aria-label="Catalogue">
+          <h2>Catalogue <span id="fTotal"></span></h2>
+          <div id="fList"></div>
+        </section>
+      </div>
+
+      <div class="inspect panel" id="insp" hidden>
+        <header><b id="iName"></b><span class="tag" id="iTag"></span><button class="x" id="iClose" aria-label="Close object details">×</button></header>
+        <p class="sub" id="iSub"></p>
+        <dl class="facts">
+          <div><dt>Altitude</dt><dd id="iAlt"></dd></div>
+          <div><dt>Inclination</dt><dd id="iInc"></dd></div>
+          <div><dt>Period</dt><dd id="iPer"></dd></div>
+          <div><dt>Speed</dt><dd id="iSpd"></dd></div>
+          <div><dt>Over</dt><dd id="iOver"></dd></div>
+          <div><dt>NORAD</dt><dd id="iNorad"></dd></div>
+        </dl>
+      </div>
+
+      <aside class="events panel" aria-label="Events">
+        <h2>Close approaches <span id="evCount">0 open</span></h2>
+        <ol id="evList" aria-live="polite"></ol>
+        <div class="weather" id="weather"></div>
+        <form class="ask" id="askForm">
+          <label for="askInput" class="k">Ask the copilot</label>
+          <div class="row"><input id="askInput" maxlength="300" placeholder="What needs attention first?" autocomplete="off" /><button class="btn" type="submit">Ask</button></div>
+          <p class="answer" id="askAnswer" hidden></p>
+        </form>
+      </aside>
+
+      <footer class="bottom panel">
+        <button class="btn" id="play" aria-label="Pause">❚❚</button>
+        <div class="seg" role="group" aria-label="Time speed">
+          <button class="btn" data-speed="1" aria-pressed="true">Live</button>
+          <button class="btn" data-speed="60" aria-pressed="false">60×</button>
+          <button class="btn" data-speed="600" aria-pressed="false">600×</button>
+        </div>
+        <div class="seg" role="group" aria-label="View">
+          <button class="btn" data-mode="earth" aria-pressed="true">Earth orbit</button>
+          <button class="btn" data-mode="solar" aria-pressed="false">Solar system</button>
+        </div>
+        <button class="btn" id="home">Recentre</button>
+        <span class="hint">Drag to rotate · scroll to zoom · click any object</span>
+      </footer>
+    </div>
+
+    <div class="sheet" id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <div class="panel">
+        <header><h2 id="dTitle"></h2><button class="x" id="dClose" aria-label="Close event">×</button></header>
+        <div id="dBody"></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="models" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
+      <div class="panel">
+        <header><h2 id="mTitle">Models</h2><button class="x" data-close="models" aria-label="Close models">×</button></header>
+        <div id="mBody"><p class="sub">Loading model cards…</p></div>
+      </div>
+    </div>
+
+    <div class="sheet" id="refs" hidden role="dialog" aria-modal="true" aria-labelledby="refTitle">
+      <div class="panel">
+        <header><h2 id="refTitle">References</h2><button class="x" data-close="refs" aria-label="Close references">×</button></header>
+        <p class="lede">Ashvini builds on published research and open data from space agencies, operators and universities. Every model is trained on one of these datasets and compared with a plain baseline.</p>
+        <h3>Collision risk</h3>
+        <ol>
+          <li>Uriot, T. et al. (2022). Spacecraft collision avoidance challenge: design and results of a machine learning competition. <span>Astrodynamics, 6.</span> <a href="https://arxiv.org/abs/2008.03069" target="_blank" rel="noopener">arXiv:2008.03069</a></li>
+          <li>Pinto, F. et al. (2020). Towards automated satellite conjunction management with Bayesian deep learning. <a href="https://arxiv.org/abs/2012.12450" target="_blank" rel="noopener">arXiv:2012.12450</a></li>
+          <li>European Space Agency. Collision Avoidance Challenge dataset. <a href="https://zenodo.org/records/4463683" target="_blank" rel="noopener">Zenodo 4463683</a></li>
+          <li>Foster, J. L. &amp; Estes, H. S. (1992). A parametric analysis of orbital debris collision probability and maneuver rate for space vehicles. <span>NASA JSC-25898.</span></li>
+          <li>Alfano, S. (2005). Relating position uncertainty to maximum conjunction probability. <span>Journal of the Astronautical Sciences, 53(2).</span></li>
+          <li>Hoots, F. R., Crawford, L. L. &amp; Roehrich, R. L. (1984). An analytic method to determine future close approaches between satellites. <span>Celestial Mechanics, 33.</span></li>
+          <li>Flohrer, T. et al. (2008). Assessment and categorization of TLE orbit errors for the US SSN catalogue. <span>AMOS Conference.</span></li>
+          <li>Kessler, D. J. &amp; Cour-Palais, B. G. (1978). Collision frequency of artificial satellites: the creation of a debris belt. <span>JGR, 83(A6).</span></li>
+          <li>ESA Space Environment Report and ISRO ISSAR 2024. <a href="https://www.isro.gov.in/ISSAR_2024.html" target="_blank" rel="noopener">isro.gov.in</a></li>
+        </ol>
+        <h3>Orbits and data</h3>
+        <ol>
+          <li>Vallado, D. A., Crawford, P., Hujsak, R. &amp; Kelso, T. S. (2006). Revisiting Spacetrack Report #3. <span>AIAA/AAS Astrodynamics Specialist Conference.</span></li>
+          <li>CelesTrak, maintained by T. S. Kelso. <a href="https://celestrak.org" target="_blank" rel="noopener">celestrak.org</a></li>
+          <li>Space-Track, U.S. Space Force. <a href="https://www.space-track.org" target="_blank" rel="noopener">space-track.org</a></li>
+          <li>CCSDS 508.0-B-1 Conjunction Data Message and CCSDS 502.0-B-2 Orbit Data Messages. <a href="https://public.ccsds.org" target="_blank" rel="noopener">public.ccsds.org</a></li>
+          <li>Standish, E. M. Keplerian elements for approximate positions of the major planets. <a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html" target="_blank" rel="noopener">ssd.jpl.nasa.gov</a></li>
+        </ol>
+        <h3>Space weather, density and telemetry</h3>
+        <ol>
+          <li>King, J. H. &amp; Papitashvili, N. E. (2005). The OMNI dataset. <span>JGR, 110(A2).</span> <a href="https://omniweb.gsfc.nasa.gov" target="_blank" rel="noopener">omniweb.gsfc.nasa.gov</a></li>
+          <li>NOAA Space Weather Prediction Center, planetary K-index. <a href="https://www.swpc.noaa.gov" target="_blank" rel="noopener">swpc.noaa.gov</a></li>
+          <li>Licata, R. J. &amp; Mehta, P. M. (2022). Uncertainty quantification techniques for space weather modeling: thermospheric density application. <span>Scientific Reports.</span> <a href="https://arxiv.org/abs/2201.02067" target="_blank" rel="noopener">arXiv:2201.02067</a></li>
+          <li>Kotowski, K. et al. (2024). European Space Agency benchmark for anomaly detection in satellite telemetry. <a href="https://arxiv.org/abs/2406.17826" target="_blank" rel="noopener">arXiv:2406.17826</a></li>
+          <li>IBM Research and NASA (2025). Surya, a foundation model for heliophysics. <a href="https://research.ibm.com/blog/surya-heliophysics-ai-model-sun" target="_blank" rel="noopener">research.ibm.com</a></li>
+          <li>Ansari, A. F. et al. (2024). Chronos: learning the language of time series. <a href="https://arxiv.org/abs/2403.07815" target="_blank" rel="noopener">arXiv:2403.07815</a></li>
+          <li>Das, A. et al. (2024). A decoder-only foundation model for time-series forecasting. <span>ICML.</span> <a href="https://arxiv.org/abs/2310.10688" target="_blank" rel="noopener">arXiv:2310.10688</a></li>
+          <li>Galvez, R. et al. (2019). A machine-learning data set prepared from the NASA Solar Dynamics Observatory mission. <span>ApJS, 242.</span></li>
+        </ol>
+        <h3>Vision and decision making</h3>
+        <ol>
+          <li>Park, T. H. et al. (2022). SPEED+: next-generation dataset for spacecraft pose estimation across domain gap. <a href="https://arxiv.org/abs/2110.03101" target="_blank" rel="noopener">arXiv:2110.03101</a></li>
+          <li>Kisantal, M. et al. (2020). Satellite pose estimation challenge: dataset, competition design and results. <a href="https://arxiv.org/abs/1911.02050" target="_blank" rel="noopener">arXiv:1911.02050</a></li>
+          <li>Schulman, J. et al. (2017). Proximal policy optimization algorithms. <a href="https://arxiv.org/abs/1707.06347" target="_blank" rel="noopener">arXiv:1707.06347</a></li>
+        </ol>
+        <h3>Software and maps</h3>
+        <ol>
+          <li>three.js, satellite.js, python-sgp4 (Brandon Rhodes), FastAPI, LightGBM, PyTorch, Stable-Baselines3.</li>
+          <li>Natural Earth, public domain map data. <a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">naturalearthdata.com</a></li>
+        </ol>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "features": [
+    "time_to_tca",
+    "risk",
+    "max_risk_estimate",
+    "miss_distance",
+    "relative_speed",
+    "relative_position_r",
+    "relative_position_t",
+    "relative_position_n",
+    "mahalanobis_distance",
+    "t_sigma_r",
+    "t_sigma_t",
+    "t_sigma_n",
+    "c_sigma_r",
+    "c_sigma_t",
+    "c_sigma_n",
+    "c_object_type_debris",
+    "c_object_type_rocket_body"
+  ],
+  "conformal_half_width": 1.799465967304636,
+  "version": "collision-risk-0.3",
+  "target": "delta_from_risk",
+  "shrink": 0.1,
+  "cut": -5.7,
+  "floor": -6.001
+}

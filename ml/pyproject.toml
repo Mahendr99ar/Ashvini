@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ashvini-ml"
+version = "0.1.0"
+description = "Training code for Ashvini's models: collision risk, space weather, density, telemetry, orbits, debris, RL and vision"
+license = { text = "MIT" }
+authors = [{ name = "Mahendra Meena" }]
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.1",
+  "pyarrow>=14",
+  "scipy>=1.11",
+  "scikit-learn>=1.4",
+  "lightgbm>=4.3",
+  "torch>=2.2",
+  "sgp4>=2.23",
+  "onnx>=1.15",
+  "onnxruntime>=1.17",
+  "onnxmltools>=1.12",
+  "skl2onnx>=1.16",
+]
+
+[project.optional-dependencies]
+rl = ["gymnasium>=0.29", "stable-baselines3>=2.3"]
+forecast = ["chronos-forecasting>=1.4"]
+density = ["pymsis>=0.10"]
+vision = ["opencv-python-headless>=4.9"]
+tracking = ["mlflow>=2.12"]
+dev = ["pytest>=8", "ruff>=0.4"]
+
+[tool.setuptools.packages.find]
+include = ["ashvini_ml*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

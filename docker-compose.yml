@@ -1,0 +1,44 @@
+# Everything on one machine, Postgres included. Nothing calls out except the data sources enabled below.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ashvini
+      POSTGRES_PASSWORD: ashvini
+      POSTGRES_DB: ashvini
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ashvini"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      ASHVINI_DATABASE_URL: postgresql://ashvini:ashvini@db:5432/ashvini
+    ports: ["8000:8000"]
+    depends_on:
+      db: {condition: service_healthy}
+
+  pipeline:
+    build: ./backend
+    env_file: .env
+    environment:
+      ASHVINI_DATABASE_URL: postgresql://ashvini:ashvini@db:5432/ashvini
+    command: ["python", "-m", "ashvini.pipeline"]
+    depends_on:
+      db: {condition: service_healthy}
+    profiles: ["run"]
+
+  web:
+    image: node:20-alpine
+    working_dir: /web
+    volumes: ["./web:/web"]
+    environment:
+      VITE_API_URL: http://localhost:8000
+    command: sh -c "npm ci && npm run build && npx vite preview --host 0.0.0.0 --port 5173"
+    ports: ["5173:5173"]
+
+volumes:
+  dbdata:

@@ -1,0 +1,30 @@
+name: Refresh data
+on:
+  schedule:
+    - cron: "17 */4 * * *"   # every four hours; CelesTrak asks for no more than its own update rate
+  workflow_dispatch:
+
+concurrency: {group: refresh, cancel-in-progress: false}
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults: {run: {working-directory: backend}}
+    env:
+      ASHVINI_DATABASE_URL: ${{ secrets.ASHVINI_DATABASE_URL }}
+      ASHVINI_DATA_SOURCE: celestrak
+      ASHVINI_SPACEWEATHER_SOURCE: noaa
+      ASHVINI_RISK_MODEL_PATH: ${{ vars.ASHVINI_RISK_MODEL_PATH || 'models/collision-risk.onnx' }}
+      ASHVINI_SECRET: ${{ secrets.ASHVINI_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install ".[model]"
+      - uses: actions/cache@v4
+        with:
+          path: backend/.cache
+          key: celestrak-${{ github.run_id }}
+          restore-keys: celestrak-
+      - run: python -m ashvini.pipeline

@@ -129,6 +129,16 @@ def primary_positions(primaries: Sequence[OrbitRecord], ephem: dict[int, Ephemer
     return pos
 
 
+# Objects moving together (a vehicle docked to a station, a module catalogued on its own, a
+# formation) come out of screening with a near-zero miss and near-zero relative speed. They are
+# not close approaches, and the short-encounter Pc model assumes a fast pass, so they are left out.
+MIN_REL_SPEED_KMS = 0.01  # 10 m/s
+
+
+def co_moving(v1: np.ndarray, v2: np.ndarray, min_speed_kms: float = MIN_REL_SPEED_KMS) -> bool:
+    return float(np.linalg.norm(np.asarray(v2) - np.asarray(v1))) < min_speed_kms
+
+
 def screen(primaries: Sequence[OrbitRecord], catalogue: Sequence[OrbitRecord], start: datetime, days: float,
            step_s: float = 30.0, report_km: float = 5.0,
            ephemerides: dict[int, EphemerisTrack] | None = None) -> list[Encounter]:
@@ -158,6 +168,8 @@ def screen(primaries: Sequence[OrbitRecord], catalogue: Sequence[OrbitRecord], s
                 continue
             r1, v1 = f1(t_s)
             r2, v2 = f2(t_s)
+            if co_moving(v1, v2):
+                continue
             enc = Encounter(p.norad_id, s.norad_id, start + timedelta(seconds=t_s), miss,
                             float(np.linalg.norm(v2 - v1)), r1, v1, r2, v2)
             key = (*sorted((p.norad_id, s.norad_id)), round(t_s / 60))

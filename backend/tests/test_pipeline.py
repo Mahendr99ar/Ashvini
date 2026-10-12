@@ -83,3 +83,26 @@ def test_two_passes_of_one_pair_in_the_same_hour_get_different_ids():
     assert new_event_id(2, 1, NOW) == first
     assert new_event_id(1, 2, NOW + timedelta(minutes=48)) != first
     assert new_event_id(1, 2, NOW, taken=lambda i: i == first) != first
+
+
+def test_objects_moving_together_are_not_close_approaches():
+    import numpy as np
+
+    from ashvini.screening.screen import co_moving
+
+    assert co_moving(np.array([7.66, 0.0, 0.0]), np.array([7.6601, 0.0, 0.0]))  # docked: 0.1 m/s apart
+    assert not co_moving(np.array([7.66, 0.0, 0.0]), np.array([-7.0, 1.0, 0.0]))  # a real crossing
+
+
+def test_non_finite_values_never_reach_the_database():
+    import math
+    from datetime import UTC, datetime
+
+    from ashvini.pipeline import clean_fields, json_safe
+
+    assert json_safe({"a": float("nan"), "b": [1.0, float("inf")], "c": "x"}) == {"a": None, "b": [1.0, None], "c": "x"}
+    base = dict(primary_id=1, secondary_id=2, tca=datetime(2026, 1, 1, tzinfo=UTC), miss_km=0.3, rel_speed_kms=10.0,
+                pc=1e-5, log_pc=-5.0, max_pc=1e-4, mahalanobis=1.2, predicted_log_risk=-5.0, predicted_low=-6.0,
+                predicted_high=-4.0, features={"mahalanobis_distance": math.nan})
+    assert clean_fields(base)["features"] == {"mahalanobis_distance": None}
+    assert clean_fields({**base, "mahalanobis": math.nan}) is None

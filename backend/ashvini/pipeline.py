@@ -185,6 +185,32 @@ def score(enc: Encounter, by_id: dict[int, OrbitRecord], ephem: dict[int, Epheme
     )
 
 
+CORE_NUMBERS = ("miss_km", "rel_speed_kms", "pc", "log_pc", "max_pc", "mahalanobis",
+                "predicted_log_risk", "predicted_low", "predicted_high")
+
+
+def json_safe(value):
+    """NaN and infinity are not valid JSON, and Postgres rejects them in JSON columns. Store them as null."""
+    if isinstance(value, dict):
+        return {k: json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(v) for v in value]
+    if isinstance(value, (float, np.floating)):
+        return float(value) if np.isfinite(value) else None
+    return value
+
+
+def clean_fields(fields: dict) -> dict | None:
+    """Make an event safe to store. Returns None if a number the product shows is not finite,
+    so one odd pair is skipped and logged instead of failing the whole run."""
+    bad = [k for k in CORE_NUMBERS if not np.isfinite(fields[k])]
+    if bad:
+        log.warning("skipping %s-%s at %s: non-finite %s", fields["primary_id"], fields["secondary_id"],
+                    fields["tca"], ", ".join(bad))
+        return None
+    return {k: (json_safe(v) if isinstance(v, (dict, list, tuple)) else v) for k, v in fields.items()}
+
+
 def save_event(session: Session, fields: dict, run_id: int, now: datetime) -> bool:
     """Insert or update one event and append its history row. Returns True when the event is new."""
     conj = find_existing(session, fields["primary_id"], fields["secondary_id"], fields["tca"])
@@ -284,7 +310,10 @@ def run_pipeline(settings: Settings | None = None, session_factory: sessionmaker
                                 settings.report_miss_km, ephem)
             created = updated = 0
             for enc in encounters:
-                if save_event(session, score(enc, by_id, ephem, settings, model, now), run.id, now):
+                fields = clean_fields(score(enc, by_id, ephem, settings, model, now))
+                if fields is None:
+                    continue
+                if save_event(session, fields, run.id, now):
                     created += 1
                 else:
                     updated += 1

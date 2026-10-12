@@ -17,7 +17,7 @@ services:
       - key: ASHVINI_SPACEWEATHER_SOURCE
         value: noaa
       - key: ASHVINI_CORS_ORIGINS
-        value: https://ashvini.vercel.app,http://localhost:5173
+        value: https://ashvini-iota.vercel.app,http://localhost:5173
       - key: ASHVINI_SECRET
         sync: false   # paste the same value as the GitHub secret, or API keys made with the admin tool will not match
       - key: ASHVINI_RISK_MODEL_PATH

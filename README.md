@@ -12,8 +12,8 @@ A live 3D console that screens the public satellite catalogue for close approach
 
 > **Ashvini is not an official collision warning service.** It runs on public orbital data, which is less precise than what operators and the Space Force hold, and it says so on every event. It recommends; a person decides, and writes down why.
 
-**Live:** `https://ashvini.vercel.app` *(after deployment, see [DEPLOY.md](DEPLOY.md))*
-**API docs:** `https://ashvini-api.onrender.com/docs`
+**Live console:** [ashvini-iota.vercel.app](https://ashvini-iota.vercel.app)
+**API:** [ashvini-api.onrender.com/docs](https://ashvini-api.onrender.com/docs) · [health](https://ashvini-api.onrender.com/api/health) · [model cards](https://ashvini-api.onrender.com/api/models) *(free tier: the first request after 15 idle minutes takes up to a minute while the API wakes)*
 **Train every model:** [Google Colab notebook](ml/notebooks/colab_train_all.ipynb) (or [Kaggle](ml/notebooks/kaggle_train_all.ipynb))
 
 Ashvini is the first of the 27 nakshatras, named for the twin healers of the sky.
